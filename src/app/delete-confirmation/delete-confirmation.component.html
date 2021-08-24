@@ -1,0 +1,5 @@
+<h5 mat-dialog-title>{{data.title}}</h5>
+<div mat-dialog-actions class="mt-3 d-flex flex-row justify-content-between">
+  <button mat-raised-button color="accent" (click)="performAction(false)">{{data.negative}}</button>
+  <button mat-raised-button color="primary" (click)="performAction(true)" cdkFocusInitial>{{data.positive}}</button>
+</div>
