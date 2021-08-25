@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { MatPaginator } from '@angular/material/paginator';
@@ -15,16 +15,14 @@ import { HomeService } from '../services/home.service';
   styleUrls: ['./home.component.scss']
 })
 
-export class HomeComponent implements OnInit, AfterViewInit {
+export class HomeComponent implements OnInit {
 
   displayedColumns: string[] = ['sno', 'name', 'contact', 'delete'];
   data : Array<TableData> = [];
   searchText: string = '';
   dataSource = new MatTableDataSource<TableData>(this.data);
   @ViewChild(MatPaginator) paginator: MatPaginator;
-  @ViewChild(MatSort, {static: false}) set content(sort: MatSort) {
-    this.dataSource.sort = sort;
-  }
+  @ViewChild(MatSort) sort: MatSort;
   
   personForm = new FormGroup({
     firstName: new FormControl(null, Validators.required),
@@ -41,11 +39,17 @@ export class HomeComponent implements OnInit, AfterViewInit {
   getData(){
     this.homeService.getRecords().then(res=>{
       this.dataSource = new MatTableDataSource<TableData>(res);
+      this.dataSource.sortingDataAccessor = (item, property) => {
+        console.log(item, property);
+        switch(property) {
+          case 'name': return String(item.firstName) + String(item.lastName);
+          case 'contact': return String(item.contactNo);
+          default: return String(item.firstName);
+        }
+      };
+      this.dataSource.sort = this.sort;
+      this.dataSource.paginator = this.paginator;
     });
-  }
-
-  ngAfterViewInit() {
-    this.dataSource.paginator = this.paginator;
   }
 
   deleteData(id: string){
@@ -72,7 +76,7 @@ export class HomeComponent implements OnInit, AfterViewInit {
     let found: boolean = false;
 
     DataList.forEach(res=> {
-      if(res.contactNo == newData.contactNo || (String(res.firstName) + String(res.lastName)) == (String(newData.firstName) + String(newData.lastName)))
+      if(res.contactNo == newData.contactNo || (String(res.firstName) + String(res.lastName)).toLocaleLowerCase() == (String(newData.firstName) + String(newData.lastName)).toLocaleLowerCase())
       {
         found = true;
       }
@@ -84,7 +88,7 @@ export class HomeComponent implements OnInit, AfterViewInit {
     }
     else{
       this.homeService.addRecord(newData).then(res=>{
-        this.displayMessage('Record updated Successfully !');
+        this.displayMessage('Record added Successfully !');
         newData.id = res;
         DataList.push(newData);
         this.dataSource.data = DataList;
