@@ -1,8 +1,5 @@
 import { Injectable, NgZone } from '@angular/core';
-import firebase from 'firebase/app';
-import 'firebase/firestore';
-import 'firebase/auth';
-import { environment } from 'src/environments/environment';
+import { Firestore, collection, getDocs, addDoc, doc, deleteDoc } from '@angular/fire/firestore';
 import { TableData } from '../models/models';
 
 @Injectable({
@@ -10,49 +7,48 @@ import { TableData } from '../models/models';
 })
 export class HomeService {
 
-  constructor(public ngZone: NgZone) {
-    firebase.initializeApp(environment.firebaseConfig);
-   }
+  constructor(private firestore: Firestore, private ngZone: NgZone) {}
 
-  async getRecords(): Promise<TableData[]>{
-    let list : Array<TableData> = [];
-    await firebase.firestore().collection('Info')
-    .get()
-    .then((querySnapshot) => {
+  async getRecords(): Promise<TableData[]> {
+    const list: TableData[] = [];
+    try {
+      const infoCollection = collection(this.firestore, 'Info');
+      const querySnapshot = await getDocs(infoCollection);
+
       this.ngZone.run(() => {
-        querySnapshot.forEach((doc) => {
-          let temp: TableData = doc.data();
-          temp.id = doc.id;
+        querySnapshot.forEach((docSnap) => {
+          const temp: TableData = { ...docSnap.data() } as TableData;
+          temp.id = docSnap.id;
           list.push(temp);
         });
       });
-    }).catch((err) => {
-      console.log(err);
-      list = [];
-    });
+
+    } catch (error) {
+      console.error('Error fetching records:', error);
+    }
+
     return list;
   }
 
   async addRecord(data: any): Promise<string> {
-    let id: string = ''
-    await firebase.firestore().collection('Info').add(data)
-    .then((docRef) => {
-      id = docRef.id;
-      console.log('Added Successfully !');
-    })
-    .catch((error) => {
-      console.error('Something went wrong !', error);
-    });
-    return id;
+    try {
+      const infoCollection = collection(this.firestore, 'Info');
+      const docRef = await addDoc(infoCollection, data);
+      console.log('Added Successfully!');
+      return docRef.id;
+    } catch (error) {
+      console.error('Something went wrong!', error);
+      return '';
+    }
   }
 
-  async deleteRecord(id: any): Promise<void>{
-    await firebase.firestore().collection('Info').doc(id).delete()
-    .then(res => {
-      console.log('Deleted Successfully !');
-    })
-    .catch((error) => {
-      console.error('Something went wrong !', error);
-    });
+  async deleteRecord(id: string): Promise<void> {
+    try {
+      const docRef = doc(this.firestore, `Info/${id}`);
+      await deleteDoc(docRef);
+      console.log('Deleted Successfully!');
+    } catch (error) {
+      console.error('Something went wrong!', error);
+    }
   }
 }

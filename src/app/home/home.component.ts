@@ -1,18 +1,19 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
-import { FormControl, FormGroup, Validators } from '@angular/forms';
-import { MatDialog } from '@angular/material/dialog';
-import { MatPaginator } from '@angular/material/paginator';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
 import { MatSort } from '@angular/material/sort';
-import { MatTableDataSource } from '@angular/material/table';
 import { DeleteConfirmationComponent } from '../delete-confirmation/delete-confirmation.component';
 import { TableData } from '../models/models';
 import { HomeService } from '../services/home.service';
+import { MatTableDataSource } from '@angular/material/table';
+import { MatPaginator } from '@angular/material/paginator';
+import { MatDialog } from '@angular/material/dialog';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Component({
-  selector: 'app-home',
-  templateUrl: './home.component.html',
-  styleUrls: ['./home.component.scss']
+    selector: 'app-home',
+    templateUrl: './home.component.html',
+    styleUrls: ['./home.component.scss'],
+    standalone: false
 })
 
 export class HomeComponent implements OnInit {
@@ -24,10 +25,10 @@ export class HomeComponent implements OnInit {
   @ViewChild(MatPaginator) paginator: MatPaginator;
   @ViewChild(MatSort) sort: MatSort;
   
-  personForm = new FormGroup({
-    firstName: new FormControl(null, Validators.required),
-    lastName: new FormControl(null, Validators.required),
-    contactNo: new FormControl(null, [Validators.required, Validators.minLength(10), Validators.maxLength(13)]),
+  personForm = new UntypedFormGroup({
+    firstName: new UntypedFormControl(null, Validators.required),
+    lastName: new UntypedFormControl(null, Validators.required),
+    contactNo: new UntypedFormControl(null, [Validators.required, Validators.minLength(10), Validators.maxLength(13)]),
   });
 
   constructor(public dialog: MatDialog, private snackBar: MatSnackBar, private homeService: HomeService) { }
@@ -40,7 +41,6 @@ export class HomeComponent implements OnInit {
     this.homeService.getRecords().then(res=>{
       this.dataSource = new MatTableDataSource<TableData>(res);
       this.dataSource.sortingDataAccessor = (item, property) => {
-        console.log(item, property);
         switch(property) {
           case 'name': return String(item.firstName) + String(item.lastName);
           case 'contact': return String(item.contactNo);
